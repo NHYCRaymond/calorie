@@ -1,0 +1,2 @@
+{"level":"info","msg":"Starting MongoDB example","time":"2025-04-08T18:30:37+08:00"}
+{"level":"info","msg":"Initializing MongoDB client","service":"mongodb-example","time":"2025-04-08T18:30:37+08:00","version":"1.0.0"}

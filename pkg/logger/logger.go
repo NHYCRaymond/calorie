@@ -3,6 +3,7 @@
 package logger
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -29,51 +30,72 @@ func InitLogger(config *Config) {
 	}
 
 	log = logrus.New()
+
+	// 设置日志格式为 JSON
 	log.SetFormatter(&logrus.JSONFormatter{
 		TimestampFormat: time.RFC3339,
 	})
 
+	// 设置日志级别为 Info
+	log.SetLevel(logrus.InfoLevel)
+
 	// 确保日志目录存在
 	if err := os.MkdirAll(config.LogPath, 0755); err != nil {
-		panic(err)
+		logrus.Fatal("Failed to create log directory:", err)
 	}
 
-	// 设置日志输出
-	log.SetOutput(&lumberjack.Logger{
+	// 创建日志文件
+	logFile := &lumberjack.Logger{
 		Filename:   filepath.Join(config.LogPath, "app.log"),
 		MaxSize:    config.MaxSize,
 		MaxBackups: config.MaxBackups,
 		MaxAge:     config.MaxAge,
 		Compress:   config.Compress,
-	})
+	}
+
+	// 同时输出到文件和控制台
+	log.SetOutput(io.MultiWriter(os.Stdout, logFile))
 }
 
 // Debug 输出调试日志
 func Debug(args ...interface{}) {
-	log.Debug(args...)
+	if log != nil {
+		log.Debug(args...)
+	}
 }
 
 // Info 输出信息日志
 func Info(args ...interface{}) {
-	log.Info(args...)
+	if log != nil {
+		log.Info(args...)
+	}
 }
 
 // Warn 输出警告日志
 func Warn(args ...interface{}) {
-	log.Warn(args...)
+	if log != nil {
+		log.Warn(args...)
+	}
 }
 
 // Error 输出错误日志
 func Error(args ...interface{}) {
-	log.Error(args...)
+	if log != nil {
+		log.Error(args...)
+	}
 }
 
 // Fatal 输出致命错误日志
 func Fatal(args ...interface{}) {
-	log.Fatal(args...)
+	if log != nil {
+		log.Fatal(args...)
+	}
 }
 
 // WithFields 添加字段到日志
 func WithFields(fields logrus.Fields) *logrus.Entry {
-	return log.WithFields(fields)
+	if log != nil {
+		return log.WithFields(fields)
+	}
+	return logrus.NewEntry(logrus.New())
 }
