@@ -1,5 +1,11 @@
 // Package mongodb provides a MongoDB client wrapper with connection pooling and authentication support.
 // It simplifies MongoDB operations with a clean and consistent API.
+//
+// 协程安全说明：
+// 1. Client 实例是协程安全的，可以在多个 goroutine 中共享
+// 2. 连接池管理是线程安全的
+// 3. 会话和事务是隔离的，每个会话都有自己的上下文
+// 4. 查询和更新操作是原子的
 package mongodb
 
 import (
@@ -49,6 +55,7 @@ type Client struct {
 }
 
 // NewClient 创建新的 MongoDB 客户端
+// 注意：返回的 Client 实例是协程安全的，可以在多个 goroutine 中共享
 func NewClient(config *Config, metricsClient *metrics.Client) (*Client, error) {
 	if config == nil {
 		config = DefaultConfig
@@ -102,6 +109,8 @@ func (c *Client) Close() error {
 }
 
 // WithTransaction 执行事务
+// 注意：事务操作是隔离的，每个事务都有自己的上下文
+// 建议：不要在事务中执行长时间运行的操作，以免阻塞其他事务
 func (c *Client) WithTransaction(ctx context.Context, fn func(sessCtx mongo.SessionContext) (interface{}, error)) (interface{}, error) {
 	session, err := c.client.StartSession()
 	if err != nil {
@@ -142,6 +151,8 @@ func (c *Client) FindOne(ctx context.Context, collection string, filter interfac
 }
 
 // Find 查询多个文档
+// 注意：查询操作是原子的，但返回的 Cursor 对象不是协程安全的
+// 建议：每个 goroutine 使用自己的 Cursor 对象
 func (c *Client) Find(ctx context.Context, collection string, filter interface{}, opts ...*options.FindOptions) (*mongo.Cursor, error) {
 	start := time.Now()
 	cursor, err := c.Collection(collection).Find(ctx, filter, opts...)

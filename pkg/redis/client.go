@@ -1,5 +1,11 @@
 // Package redis provides a Redis client wrapper with connection pooling and common operations.
 // It offers a simple interface for Redis key-value operations.
+//
+// 协程安全说明：
+// 1. Client 实例是协程安全的，可以在多个 goroutine 中共享
+// 2. 连接池管理是线程安全的
+// 3. 命令执行是原子的
+// 4. Pipeline 和事务操作是隔离的
 package redis
 
 import (
@@ -55,6 +61,7 @@ type Client struct {
 }
 
 // NewClient 创建新的 Redis 客户端
+// 注意：返回的 Client 实例是协程安全的，可以在多个 goroutine 中共享
 func NewClient(config *Config, metricsClient *metrics.Client) (*Client, error) {
 	if config == nil {
 		config = DefaultConfig
@@ -478,4 +485,18 @@ func getStatus(err error) string {
 		return "success"
 	}
 	return "error"
+}
+
+// Pipeline 执行管道操作
+// 注意：Pipeline 操作是隔离的，每个 Pipeline 都有自己的上下文
+// 建议：不要在 Pipeline 中执行太多命令，以免阻塞其他操作
+func (c *Client) Pipeline() redis.Pipeliner {
+	return c.client.Pipeline()
+}
+
+// TxPipeline 执行事务管道操作
+// 注意：事务操作是隔离的，每个事务都有自己的上下文
+// 建议：不要在事务中执行太多命令，以免阻塞其他操作
+func (c *Client) TxPipeline() redis.Pipeliner {
+	return c.client.TxPipeline()
 }

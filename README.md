@@ -7,6 +7,7 @@
 - 基于 logrus 的日志工具，支持日志轮转和多级日志
 - Gin 框架的中间件集合，包括请求追踪、指标收集等
 - MongoDB 客户端封装，支持连接池和常用操作
+- MySQL 客户端封装，支持连接池和事务管理
 - Redis 客户端封装，支持连接池和完整的数据类型操作
 - Prometheus 指标收集，支持自定义指标和多种指标类型
 - 统一的错误处理机制，支持错误码和错误详情
@@ -134,6 +135,53 @@ var user User
 err = collection.FindOne(ctx, bson.D{{"name", "test"}}).Decode(&user)
 ```
 
+### MySQL 客户端
+
+```go
+import "github.com/NHYCRaymond/calorie/pkg/mysql"
+
+// 初始化客户端
+client, err := mysql.NewClient(&mysql.Config{
+    URI:             "tcp(localhost:3306)",
+    Database:        "test",
+    Username:        "root",
+    Password:        "password",
+    MaxOpenConns:    100,
+    MaxIdleConns:    10,
+    ConnMaxLifetime: 30 * time.Minute,
+    ConnMaxIdleTime: 10 * time.Minute,
+    EnableMetrics:   true,
+    ServiceName:     "user-service",
+})
+
+// 使用客户端
+ctx := context.Background()
+
+// 查询操作
+rows, err := client.Query(ctx, "SELECT * FROM users WHERE age > ?", 18)
+if err != nil {
+    return err
+}
+defer rows.Close()
+
+// 单行查询
+var user User
+err = client.QueryRow(ctx, "SELECT * FROM users WHERE id = ?", 1).Scan(&user.ID, &user.Name, &user.Age)
+
+// 执行操作
+result, err := client.Exec(ctx, "INSERT INTO users (name, age) VALUES (?, ?)", "test", 18)
+
+// 事务操作
+err = client.WithTransaction(ctx, func(tx *sql.Tx) error {
+    // 在事务中执行操作
+    _, err := tx.ExecContext(ctx, "UPDATE users SET age = ? WHERE id = ?", 19, 1)
+    if err != nil {
+        return err
+    }
+    return nil
+})
+```
+
 ### Redis 客户端
 
 ```go
@@ -234,6 +282,9 @@ Gin 框架的中间件集合，包括请求追踪、指标收集、超时控制�
 
 ### mongodb
 MongoDB 客户端封装，提供连接池管理、常用操作封装、指标收集等功能。
+
+### mysql
+MySQL 客户端封装，提供连接池管理、事务支持、指标收集等功能。
 
 ### redis
 Redis 客户端封装，支持所有数据类型操作、连接池管理、指标收集等功能。
