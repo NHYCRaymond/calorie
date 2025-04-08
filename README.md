@@ -8,6 +8,7 @@
 - Gin 框架的响应中间件
 - MongoDB 客户端封装
 - Redis 客户端封装
+- 统一的错误处理机制
 
 ## 设计理念
 
@@ -19,15 +20,35 @@
 ## 安装
 
 ```bash
-go get github.com/raymond/calorie
+go get github.com/NHYCRaymond/calorie
 ```
 
 ## 使用示例
 
+### 错误处理
+
+```go
+import "github.com/NHYCRaymond/calorie/pkg/err"
+
+// 创建错误
+e := err.New(err.CodeNotFound, "user not found", "user_id: 123")
+
+// 添加错误详情
+e = e.WithDetails("username: test")
+
+// 判断错误类型
+if err.Is(e, err.CodeNotFound) {
+    // 处理未找到错误
+}
+
+// 获取错误消息
+message := err.GetMessage(err.CodeNotFound)
+```
+
 ### 日志工具
 
 ```go
-import "github.com/raymond/calorie/pkg/logger"
+import "github.com/NHYCRaymond/calorie/pkg/logger"
 
 // 初始化日志配置
 logger.InitLogger(&logger.Config{
@@ -45,7 +66,10 @@ logger.Info("This is an info message")
 ### Gin 响应中间件
 
 ```go
-import "github.com/raymond/calorie/pkg/gin"
+import (
+    "github.com/NHYCRaymond/calorie/pkg/gin"
+    "github.com/NHYCRaymond/calorie/pkg/err"
+)
 
 // 在路由中使用
 router := gin.Default()
@@ -53,16 +77,21 @@ router.Use(gin.ResponseMiddleware())
 
 // 在处理器中使用
 func handler(c *gin.Context) {
+    // 成功响应
     gin.Success(c, gin.H{
         "data": "your data",
     })
+
+    // 错误响应
+    e := err.New(err.CodeNotFound, "user not found")
+    gin.Error(c, e.Code, e.Message)
 }
 ```
 
 ### MongoDB 客户端
 
 ```go
-import "github.com/raymond/calorie/pkg/mongodb"
+import "github.com/NHYCRaymond/calorie/pkg/mongodb"
 
 // 初始化客户端
 client, err := mongodb.NewClient(&mongodb.Config{
@@ -74,7 +103,7 @@ client, err := mongodb.NewClient(&mongodb.Config{
 ### Redis 客户端
 
 ```go
-import "github.com/raymond/calorie/pkg/redis"
+import "github.com/NHYCRaymond/calorie/pkg/redis"
 
 // 初始化客户端
 client, err := redis.NewClient(&redis.Config{

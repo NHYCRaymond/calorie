@@ -1,4 +1,4 @@
-module github.com/raymond/calorie
+module github.com/NHYCRaymond/calorie
 
 go 1.21
 
