@@ -28,21 +28,21 @@ go get github.com/NHYCRaymond/calorie
 ### 错误处理
 
 ```go
-import "github.com/NHYCRaymond/calorie/pkg/err"
+import "github.com/NHYCRaymond/calorie/pkg/errors"
 
 // 创建错误
-e := err.New(err.CodeNotFound, "user not found", "user_id: 123")
+e := errors.New(errors.CodeNotFound, "user not found", "user_id: 123")
 
 // 添加错误详情
 e = e.WithDetails("username: test")
 
 // 判断错误类型
-if err.Is(e, err.CodeNotFound) {
+if errors.Is(e, errors.CodeNotFound) {
     // 处理未找到错误
 }
 
 // 获取错误消息
-message := err.GetMessage(err.CodeNotFound)
+message := errors.GetMessage(errors.CodeNotFound)
 ```
 
 ### 日志工具

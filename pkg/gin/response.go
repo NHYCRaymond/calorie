@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/NHYCRaymond/calorie/pkg/err"
+	"github.com/NHYCRaymond/calorie/pkg/errors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -30,11 +30,11 @@ const (
 
 // Response 统一响应结构
 type Response struct {
-	Code      err.ErrorCode `json:"code"`                 // 响应码
-	Message   string        `json:"message"`              // 响应消息
-	Data      interface{}   `json:"data,omitempty"`       // 响应数据
-	Timestamp int64         `json:"timestamp"`            // 时间戳
-	RequestID string        `json:"request_id,omitempty"` // 请求ID
+	Code      errors.ErrorCode `json:"code"`                 // 响应码
+	Message   string           `json:"message"`              // 响应消息
+	Data      interface{}      `json:"data,omitempty"`       // 响应数据
+	Timestamp int64            `json:"timestamp"`            // 时间戳
+	RequestID string           `json:"request_id,omitempty"` // 请求ID
 }
 
 // Config 中间件配置
@@ -55,17 +55,17 @@ var DefaultConfig = &Config{
 
 // Success 成功响应
 func Success(c *gin.Context, data interface{}) {
-	response(c, err.CodeSuccess, data)
+	response(c, errors.CodeSuccess, data)
 }
 
 // Error 错误响应
-func Error(c *gin.Context, code err.ErrorCode, message string) {
+func Error(c *gin.Context, code errors.ErrorCode, message string) {
 	response(c, code, nil, message)
 }
 
 // response 统一响应处理
-func response(c *gin.Context, code err.ErrorCode, data interface{}, messages ...string) {
-	message := err.GetMessage(code)
+func response(c *gin.Context, code errors.ErrorCode, data interface{}, messages ...string) {
+	message := errors.GetMessage(code)
 	if len(messages) > 0 {
 		message = messages[0]
 	}
@@ -117,10 +117,10 @@ func ResponseMiddleware(config ...*Config) gin.HandlerFunc {
 			if cfg.ErrorHandler != nil {
 				cfg.ErrorHandler(c, lastError)
 			} else {
-				if e, ok := lastError.Err.(*err.Error); ok {
+				if e, ok := lastError.Err.(*errors.Error); ok {
 					Error(c, e.Code, e.Message)
 				} else {
-					Error(c, err.CodeServerError, lastError.Error())
+					Error(c, errors.CodeServerError, lastError.Error())
 				}
 			}
 			return
@@ -132,13 +132,13 @@ func ResponseMiddleware(config ...*Config) gin.HandlerFunc {
 		case http.StatusOK:
 			Success(c, nil)
 		case http.StatusUnauthorized:
-			Error(c, err.CodeUnauthorized, "")
+			Error(c, errors.CodeUnauthorized, "")
 		case http.StatusForbidden:
-			Error(c, err.CodeForbidden, "")
+			Error(c, errors.CodeForbidden, "")
 		case http.StatusNotFound:
-			Error(c, err.CodeNotFound, "")
+			Error(c, errors.CodeNotFound, "")
 		default:
-			Error(c, err.CodeServerError, http.StatusText(status))
+			Error(c, errors.CodeServerError, http.StatusText(status))
 		}
 	}
 }
