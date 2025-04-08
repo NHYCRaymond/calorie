@@ -1,3 +1,5 @@
+// Package gin provides a unified response middleware for Gin framework.
+// It standardizes API responses with code, message, and data fields.
 package gin
 
 import (

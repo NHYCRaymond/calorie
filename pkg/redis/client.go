@@ -1,3 +1,5 @@
+// Package redis provides a Redis client wrapper with connection pooling and common operations.
+// It offers a simple interface for Redis key-value operations.
 package redis
 
 import (

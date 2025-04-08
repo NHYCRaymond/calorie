@@ -1,3 +1,5 @@
+// Package mongodb provides a MongoDB client wrapper with connection pooling and authentication support.
+// It simplifies MongoDB operations with a clean and consistent API.
 package mongodb
 
 import (
