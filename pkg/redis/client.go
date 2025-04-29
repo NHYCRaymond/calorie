@@ -414,6 +414,12 @@ func (c *Client) SIsMember(ctx context.Context, key string, member interface{}) 
 	return result, nil
 }
 
+// RedisClient 返回底层的 redis.Client 实例
+// 警告：直接操作底层客户端可能会绕过封装的指标收集和错误处理逻辑。请谨慎使用。
+func (c *Client) RedisClient() *redis.Client {
+	return c.client
+}
+
 // ZAdd 有序集合添加成员
 func (c *Client) ZAdd(ctx context.Context, key string, members ...*redis.Z) error {
 	op := c.newOperation("zadd")
