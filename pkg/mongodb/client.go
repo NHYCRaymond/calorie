@@ -96,6 +96,12 @@ func NewClient(config *Config, metricsClient *metrics.Client) (*Client, error) {
 	}, nil
 }
 
+// Client 返回底层的 *mongo.Client 实例
+// 注意：直接操作底层客户端可能绕过封装的指标记录等功能
+func (c *Client) Client() *mongo.Client {
+	return c.client
+}
+
 // Collection 获取集合
 func (c *Client) Collection(name string) *mongo.Collection {
 	return c.database.Collection(name)
@@ -108,19 +114,26 @@ func (c *Client) Close() error {
 	return c.client.Disconnect(ctx)
 }
 
+// StartSession 启动一个新的 MongoDB 会话
+// 返回的 Session 需要调用 EndSession 来关闭
+func (c *Client) StartSession(opts ...*options.SessionOptions) (mongo.Session, error) {
+	return c.client.StartSession(opts...)
+}
+
 // WithTransaction 执行事务
 // 注意：事务操作是隔离的，每个事务都有自己的上下文
 // 建议：不要在事务中执行长时间运行的操作，以免阻塞其他事务
-func (c *Client) WithTransaction(ctx context.Context, fn func(sessCtx mongo.SessionContext) (interface{}, error)) (interface{}, error) {
+func (c *Client) WithTransaction(ctx context.Context, fn func(sessCtx mongo.SessionContext) (interface{}, error), opts ...*options.TransactionOptions) (interface{}, error) {
 	session, err := c.client.StartSession()
 	if err != nil {
 		return nil, err
 	}
 	defer session.EndSession(ctx)
 
-	result, err := session.WithTransaction(ctx, fn)
+	// 注意：原版的 session.WithTransaction 自动处理提交和回滚
+	result, err := session.WithTransaction(ctx, fn, opts...)
 	if err != nil {
-		return nil, err
+		return nil, err // 如果 fn 返回错误或提交失败，会返回错误
 	}
 
 	return result, nil

@@ -70,7 +70,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to insert document: %v", err)
 	}
-	fmt.Printf("Inserted document with ID: %v\n", result.InsertedID)
+	logger.Info(fmt.Sprintf("Inserted document with ID: %v\n", result.InsertedID))
 
 	// 查询文档
 	filter := map[string]interface{}{
@@ -88,10 +88,10 @@ func main() {
 		if err := cursor.Decode(&result); err != nil {
 			log.Fatalf("Failed to decode document: %v", err)
 		}
-		fmt.Printf("Found document: %v\n", result)
+		logger.Info(fmt.Sprintf("Found document: %v\n", result))
 	}
 
 	if err := cursor.Err(); err != nil {
-		log.Fatalf("Cursor error: %v", err)
+		logger.Error(fmt.Sprintf("Cursor error: %v", err))
 	}
 }
